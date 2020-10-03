@@ -7,19 +7,20 @@ inline void MinForegroundWindow() {
     ShowWindow(foreWND, SW_FORCEMINIMIZE);
 }
 
-inline void OpenDistraction() {
-    HWND totallyWorking = FindWindow(NULL, "Command Prompt"); // Hardcoded window title (for now)
-    SetForegroundWindow(totallyWorking); // Brings window to the front if it is hidden behind other windows
-    ShowWindow(totallyWorking, SW_MAXIMIZE);
+inline void OpenDistraction(HWND workWindow) {
+    SetForegroundWindow(workWindow); // Brings window to the front if it is hidden behind other windows
+    ShowWindow(workWindow, SW_MAXIMIZE);
 }
 
 int main () {
     FreeConsole(); // Will need to kill process from task manager
-    if (RegisterHotKey(NULL, 1, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, 0x43)) {
-        MessageBox(NULL, "Hotkey CTRL+ALT+C has been set", "Success", MB_OK);
+    HWND workWND;
+    if (RegisterHotKey(NULL, 1, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, 0x56) && // CTRL+ALT+V
+        RegisterHotKey(NULL, 2, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, 0x53)) { // CTRL+ALT+S
+        MessageBox(NULL, "Hotkeys have been set", "Success", MB_OK);
     }
     else {
-        MessageBox(NULL, "Hotkey failed to register", "Error", MB_OK);
+        MessageBox(NULL, "Hotkeys failed to register", "Error", MB_OK);
         return 0;
     }
  
@@ -27,8 +28,13 @@ int main () {
     while (GetMessage(&msg, NULL, 0, 0) != 0) { // Condition will fail once WM_QUIT message is posted to the queue
         switch (msg.message) {
             case WM_HOTKEY: // Possible to check for specific hotkey presses (lParam values)
-                MinForegroundWindow();
-                OpenDistraction();
+                if (msg.wParam == 2) { // Hotkey to mark foreground window as work window
+                    workWND = GetForegroundWindow();
+                }
+                else if (msg.wParam == 1) { // Panic hotkey
+                    MinForegroundWindow();
+                    OpenDistraction(workWND);
+                }
                 break;
         }
     }
